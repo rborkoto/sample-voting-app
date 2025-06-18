@@ -1,50 +1,140 @@
-# Example Voting App
+# Sample Voting App
 
-A simple distributed application running across multiple Docker containers.
+A simple distributed application running across multiple containers froked from dockersamples. This fork has some updated readme guidelines to help with deployment across any platform
 
-## Getting started
+## Prerequisites
 
-Download [Docker Desktop](https://www.docker.com/products/docker-desktop) for Mac or Windows. [Docker Compose](https://docs.docker.com/compose) will be automatically installed. On Linux, make sure you have the latest version of [Compose](https://docs.docker.com/compose/install/).
+Before you begin, ensure you have:
+- `kubectl` installed and configured for your target cluster
+- Access and credentials for each Kubernetes platform (Minikube, EKS, GKE, AKS)
+- The `k8s-specifications/` directory from this repo, containing all YAML manifests
 
-This solution uses Python, Node.js, .NET, with Redis for messaging and Postgres for storage.
+## Deployment Instructions
 
-Run in this directory to build and run the app:
+Below are instructions to deploy the Voting App solely via Kubernetes. All steps assume you are in the root of the cloned repo.
 
-```shell
-docker compose up
-```
+### Minikube
 
-The `vote` app will be running at [http://localhost:8080](http://localhost:8080), and the `results` will be at [http://localhost:8081](http://localhost:8081).
+1. Start Minikube with necessary addons:
+   ```shell
+   minikube start --addons=ingress
+   ```
+2. Deploy the app:
+   ```shell
+   kubectl create -f k8s-specifications/
+   ```
+3. (Optional) Expose Ingress on localhost:
+   ```shell
+   minikube tunnel
+   ```
+4. Access the services:
+   ```shell
+   minikube service vote   -n voting-app --url   # prints the Vote UI URL
+   minikube service result -n voting-app --url   # prints the Result UI URL
+   ```
+5. To clean up(once done):
+   ```shell
+   kubectl delete -f k8s-specifications/
+   ```
 
-Alternately, if you want to run it on a [Docker Swarm](https://docs.docker.com/engine/swarm/), first make sure you have a swarm. If you don't, run:
+---
 
-```shell
-docker swarm init
-```
+### Amazon EKS
 
-Once you have your swarm, in this directory run:
+1. Install & configure `eksctl` and AWS CLI, and authenticate:
+   ```shell
+   aws configure
+   eksctl create cluster --name vote-cluster --region <region> --nodes 2
+   ```
+2. Ensure `kubectl` context is set to the new cluster:
+   ```shell
+   aws eks --region <region> update-kubeconfig --name vote-cluster
+   ```
+3. Deploy Voting App to EKS:
+   ```shell
+   kubectl create namespace voting-app
+   kubectl create -f k8s-specifications/ -n voting-app
+   ```
+4. Expose with LoadBalancer or NodePort (depending on your setup):
+   - If using NodePort:
+     ```shell
+     kubectl get svc -n voting-app
+     # Note the EXTERNAL-IP or NodePort
+     ```
+   - If using Ingress + ALB ingress controller, apply your Ingress manifest.
 
-```shell
-docker stack deploy --compose-file docker-stack.yml vote
-```
+5. Clean up(once done):
+   ```shell
+   kubectl delete -f k8s-specifications/ -n voting-app
+   eksctl delete cluster --name vote-cluster --region <region>
+   ```
 
-## Run the app in Kubernetes
+---
 
-The folder k8s-specifications contains the YAML specifications of the Voting App's services.
+### Google Kubernetes Engine (GKE)
 
-Run the following command to create the deployments and services. Note it will create these resources in your current namespace (`default` if you haven't changed it.)
+1. Install & configure `gcloud` CLI, then authenticate and set project:
+   ```shell
+   gcloud auth login
+   gcloud config set project <PROJECT_ID>
+   ```
+2. Create a GKE cluster:
+   ```shell
+   gcloud container clusters create vote-cluster --zone <zone>
+   ```
+3. Get cluster credentials:
+   ```shell
+   gcloud container clusters get-credentials vote-cluster --zone <zone>
+   ```
+4. Deploy the app:
+   ```shell
+   kubectl create namespace voting-app
+   kubectl create -f k8s-specifications/ -n voting-app
+   ```
+5. Access services:
+   - For `NodePort` services, run:
+     ```shell
+     kubectl get svc -n voting-app
+     ```
+   - For `LoadBalancer` services, note the `EXTERNAL-IP`.
 
-```shell
-kubectl create -f k8s-specifications/
-```
+6. Tear down(once done):
+   ```shell
+   kubectl delete -f k8s-specifications/ -n voting-app
+   gcloud container clusters delete vote-cluster --zone <zone>
+   ```
 
-The `vote` web app is then available on port 31000 on each host of the cluster, the `result` web app is available on port 31001.
+---
 
-To remove them, run:
+### Azure Kubernetes Service (AKS)
 
-```shell
-kubectl delete -f k8s-specifications/
-```
+1. Install & configure Azure CLI, then login:
+   ```shell
+   az login
+   az account set --subscription <SUBSCRIPTION_ID>
+   ```
+2. Create an AKS cluster:
+   ```shell
+   az aks create --resource-group vote-rg --name vote-aks --node-count 2 --generate-ssh-keys
+   ```
+3. Get credentials:
+   ```shell
+   az aks get-credentials --resource-group vote-rg --name vote-aks
+   ```
+4. Deploy the app:
+   ```shell
+   kubectl create namespace voting-app
+   kubectl create -f k8s-specifications/ -n voting-app
+   ```
+5. Access the services:
+   ```shell
+   kubectl get svc -n voting-app
+   # Use EXTERNAL-IP for LoadBalancer or NodePort as needed
+   ```
+6. Clean up (once done):
+   ```shell
+   kubectl delete -f k8s-specifications/ -n voting-app
+   az aks delete --resource-group vote-rg --name vote-aks --yes
 
 ## Architecture
 
@@ -58,7 +148,7 @@ kubectl delete -f k8s-specifications/
 
 ## Notes
 
-The voting application only accepts one vote per client browser. It does not register additional votes if a vote has already been submitted from a client.
+The simple voting application only accepts one vote per client browser. It does not register additional votes if a vote has already been submitted from a client.
 
 This isn't an example of a properly architected perfectly designed distributed app... it's just a simple
 example of the various types of pieces and languages you might see (queues, persistent data, etc), and how to
