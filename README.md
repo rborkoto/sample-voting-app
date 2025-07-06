@@ -1,6 +1,6 @@
 # Sample Voting App
 
-A simple distributed application running across multiple containers froked from dockersamples. This fork has some updated readme guidelines to help with deployment across any platform
+A simple distributed application running across multiple containers forked from dockersamples. This fork has some updated readme guidelines to help with deployment across any platform
 
 ## Prerequisites
 
