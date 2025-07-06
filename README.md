@@ -152,4 +152,4 @@ The simple voting application only accepts one vote per client browser. It does 
 
 We are not generating any mock traffic to keep it lightweight. Feel free to use any tool to generate traffic or manually create traffic. 
 
-More details on the required Datadog implementation here : 
+More details on the required [Datadog implementation requirements here](https://github.com/rborkoto/sample-voting-app/blob/main/datadog-implementation/readme.md)
