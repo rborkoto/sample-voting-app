@@ -5,8 +5,8 @@ This README outlines the high-level requirements to implement core Datadog featu
 ⸻
 
 1. Prerequisites
-	•	Datadog Sandbox Account & Access: Valid Datadog organization with admin or integration privileges.
-	•	API & Application Keys: Generated API key for data ingestion and application key for dashboards/monitors.
+	•	Datadog Sandbox Account & Access: Valid Datadog organization with admin or integration privileges
+	•	API & Application Keys: Generated API key for data ingestion and application key for dashboards/monitors
 	•	Deploy the sample voting app
 
 ⸻
