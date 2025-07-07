@@ -8,6 +8,7 @@ This README outlines the high-level requirements to implement core Datadog featu
 - Datadog Sandbox Account & Access: Valid Datadog organization with admin or integration privileges
 - API & Application Keys: Generated API key for data ingestion and application key for dashboards/monitors
 - Deploy the sample voting app
+- Generate traffic manually or you can use Datadog Synthetic test to intiate tests if your hosted app URL can be accessed via public internet.
 
 ⸻
 
